@@ -1,4 +1,4 @@
-# MWinSID
+# MProcList
 Windows console application to display currently running processes.
 
 

@@ -1,24 +1,36 @@
-/*    
-    MProcList.exe : Display the current running processes
-    Copyright (C) 2017  Comine.com
+/*
+Copyright (C) 2011-2024, Comine.com ( profdevi@ymail.com )
+All rights reserved.
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+- Redistributions of source code must retain the above copyright notice,
+  this list of conditions and the following disclaimer.
+- Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
+- The the names of the contributors of this project may not be used to 
+  endorse or promote products derived from this software without specific 
+  prior written permission.
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+`AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR
+CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
 
-//v3.2 copyright Comine.com 20170409U0957
+//v3.8 copyright Comine.com 20240701M0817
 #include "MStdLib.h"
 #include "TVector.h"
 #include "MIReader.h"
@@ -70,6 +82,21 @@ MString::MString(const MString &str)
 		{
 		return;
 		}
+	}
+
+
+///////////////////////////////////////////////
+MString::MString(MString &&str)						// Move Constructor
+	{
+	ClearObject();
+	if(Create("")==false)
+		{
+		return;
+		}
+
+	// Exchange tmp move string values
+	mString.Swap(str.mString);
+	MStdSwap(mLength,str.mLength);
 	}
 
 
@@ -242,6 +269,15 @@ bool MString::Destroy(void)
 	}
 
 
+////////////////////////////////////////////////
+bool MString::Swap(MString& other) noexcept
+	{
+	mString.Swap(other.mString);
+	MStdSwap(mLength,other.mLength);
+	return true;
+	}
+
+
 ///////////////////////////////////////////////
 bool MString::operator=(const char *str)
 	{
@@ -257,9 +293,25 @@ bool MString::operator=(const wchar_t *str)
 
 
 ///////////////////////////////////////////////
-bool MString::operator=(MString &src)
+bool MString::operator=(const MString &src)
 	{
 	return Create(src);
+	}
+
+
+////////////////////////////////////////////////
+bool MString::operator==(const MString& other) const
+	{
+	if(Compare(other)==0) { return true; }
+	return false;
+	}
+
+
+////////////////////////////////////////////////
+bool MString::operator!=(const MString& other) const
+	{
+	if (Compare(other) != 0) { return true; }
+	return false;
 	}
 
 
@@ -331,14 +383,14 @@ char &MString::operator[](int index)
 
 
 ///////////////////////////////////////////////
-const char *MString::Get(void)
+const char *MString::Get(void) const
 	{
 	return mString.Get();
 	}
 
 
 ////////////////////////////////////////////////
-const char *MString::GetEnd(int count)
+const char *MString::GetEnd(int count) const
 	{
 	if(count<0) { return "";  }
 	if(count>mLength) { return "";  }
@@ -535,28 +587,28 @@ int MString::Length(void)
 
 
 ///////////////////////////////////////////////
-int MString::Compare(const char *string)
+int MString::Compare(const char *string) const
 	{
 	return MString::Compare(mString.Get(),string);
 	}
 
 
 ///////////////////////////////////////////////
-int MString::Compare(const wchar_t *string)
+int MString::Compare(const wchar_t *string) const
 	{
 	return MString::Compare(mString.Get() ,string);
 	}
 
 
 ///////////////////////////////////////////////
-int MString::Compare(MString &string)
+int MString::Compare(const MString &string) const
 	{
 	return MString::Compare(mString.Get() ,string.Get() );
 	}
 
 
 ///////////////////////////////////////////////
-int MString::Compare(MStringWide &string)
+int MString::Compare(const MStringWide &string) const
 	{
 	return MString::Compare(mString.Get(),string.Get());
 	}
@@ -1387,6 +1439,21 @@ MStringWide::MStringWide(MStringWide &str)
 
 
 ///////////////////////////////////////////////
+MStringWide::MStringWide(MStringWide &&str)
+	{
+	ClearObject();
+	if(Create("")==false)
+		{
+		return;
+		}
+
+	mString.Swap(str.mString);
+	MStdSwap(mLength,str.mLength);
+	}
+
+
+
+///////////////////////////////////////////////
 MStringWide::MStringWide(MString &str)
 	{
 	ClearObject();
@@ -1535,6 +1602,15 @@ bool MStringWide::Destroy(void)
 	}
 
 
+////////////////////////////////////////////////
+bool MStringWide::Swap(MStringWide& other) noexcept
+	{
+	mString.Swap(other.mString);
+	MStdSwap(mLength, other.mLength);
+	return true;
+	}
+
+
 ///////////////////////////////////////////////
 bool MStringWide::operator=(const char *str)
 	{  return Create(str);  }
@@ -1546,8 +1622,23 @@ bool MStringWide::operator=(const wchar_t *str)
 
 
 ///////////////////////////////////////////////
-bool MStringWide::operator=(MStringWide &src)
+bool MStringWide::operator=(const MStringWide &src)
 	{  return Create(src.mString.Get());  }
+
+
+////////////////////////////////////////////////
+bool MStringWide::operator==(const MStringWide& other) const
+	{
+	if (Compare(other) == 0) { return true; }
+	return false;
+	}
+
+////////////////////////////////////////////////
+bool MStringWide::operator!=(const MStringWide& other) const
+	{
+	if (Compare(other) != 0) { return true; }
+	return false;
+	}
 
 
 ///////////////////////////////////////////////
@@ -1559,7 +1650,7 @@ wchar_t &MStringWide::operator[](int index)
 
 
 ///////////////////////////////////////////////
-const wchar_t *MStringWide::Get(void)
+const wchar_t *MStringWide::Get(void) const
 	{  return mString.Get();  }
 
 
@@ -1695,6 +1786,24 @@ bool MStringWide::Append(const char *str)
 
 
 ///////////////////////////////////////////////
+bool MStringWide::Append(char ch)
+	{
+	char buf[2]={ch,0};
+	return Append(buf);
+	}
+
+
+///////////////////////////////////////////////
+bool MStringWide::Append(wchar_t ch)
+	{
+	wchar_t buf[2]={ch,0};
+	return Append(buf);
+	}
+
+
+
+
+///////////////////////////////////////////////
 bool MStringWide::Append(int val)
 	{
 	char buf[20];
@@ -1739,28 +1848,28 @@ int MStringWide::Length(void)
 
 
 ///////////////////////////////////////////////
-int MStringWide::Compare(const char *string)
+int MStringWide::Compare(const char *string) const
 	{
 	return MString::Compare(mString.Get(),string);
 	}
 
 
 ///////////////////////////////////////////////
-int MStringWide::Compare(const wchar_t *string)
+int MStringWide::Compare(const wchar_t *string) const 
 	{
 	return MString::Compare(mString.Get(),string);
 	}
 
 
 ///////////////////////////////////////////////
-int MStringWide::Compare(MString &string)
+int MStringWide::Compare(const MString &string) const
 	{
 	return MString::Compare(mString.Get(),string.Get() );
 	}
 
 
 ///////////////////////////////////////////////
-int MStringWide::Compare(MStringWide &string)
+int MStringWide::Compare(const MStringWide &string) const
 	{
 	return MString::Compare(mString.Get(),string.Get());
 	}

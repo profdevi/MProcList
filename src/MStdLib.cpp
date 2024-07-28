@@ -1,24 +1,36 @@
-/*    
-    MProcList.exe : Display the current running processes
-    Copyright (C) 2017  Comine.com
+/*
+Copyright (C) 2011-2024, Comine.com ( profdevi@ymail.com )
+All rights reserved.
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+- Redistributions of source code must retain the above copyright notice,
+  this list of conditions and the following disclaimer.
+- Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
+- The the names of the contributors of this project may not be used to 
+  endorse or promote products derived from this software without specific 
+  prior written permission.
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+`AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR
+CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
 
-//v2.17 copyright Comine.com 20170709U0636
+//v2.30 copyright Comine.com 20240624M1737
 /*
 Bug Notice:
 	MStdSPrintf(const wchar_t *)  seems to be failing.
@@ -79,6 +91,13 @@ static wchar_t GTempWideBuffer[100]=L"";
 //***************************************************
 //** Functions
 //***************************************************
+void MStdPrint(int val) {  MStdPrintf("%d",val);  }
+void MStdPrint(char val) {  MStdPrintf("%c",val);  }
+void MStdPrint(float val) {  MStdPrintf("%f",val);  }
+void MStdPrint(double val) {  MStdPrintf("%lf",val);  }
+void MStdPrint(const char *val) {  MStdPrintf("%s",val);  }
+
+/////////////////////////////////////////
 bool MStdPrintInfo(void)
 	{
 	//////////////////////////////////////////////////
@@ -130,6 +149,16 @@ bool MStdPrintInfo(void)
 	MStdGetMachineName(buffer,sizeof(buffer)-2);
 	MStdPrintf(" Machine Name    :  %s\n",buffer);
 
+	// Check  if LittleEndian Machine)
+	if(MStdGetIsLittleEndian()==true)
+		{
+		MStdPrintf(" Machine Endian  :  Little \n"); 
+		}
+	else
+		{
+		MStdPrintf(" Machine Endian  :  Big \n");
+		}
+
 	// Print OS Root
 	MStdGetOSRoot(buffer,sizeof(buffer)-2);
 	MStdPrintf(" OS Root         :  %s\n",buffer);
@@ -146,11 +175,22 @@ bool MStdPrintInfo(void)
 	MStdGetUserHome(buffer,sizeof(buffer)-2);
 	MStdPrintf(" User Home       :  %s\n",buffer);
 
+	// Print Current Working Directory
+	MStdDirGet(buffer, sizeof(buffer) - 2);
+	MStdPrintf(" Current Dir     :  %s\n", buffer);
+
 	// Print out current time
 	time_t timeofday=MStdGetTime();
 	MStdCTime(buffer,sizeof(buffer)-2,&timeofday);
 	MStdPrintf(" Time of Day     :  %s\n",buffer);
-	
+
+	// Data Types Sizes
+	MStdPrintf(" size(char)      :  %d\n",sizeof(char) );
+	MStdPrintf(" size(int)       :  %d\n",sizeof(int) );
+	MStdPrintf(" size(long)      :  %d\n",sizeof(long) );
+	MStdPrintf(" size(long long) :  %d\n",sizeof(long long) );
+	MStdPrintf(" size(void *)    :  %d\n",sizeof(void *) );
+
 	return true;
 	}
 
@@ -172,7 +212,7 @@ void MStdError(const char *info,const char *filename,int lineno)
 	char line[1000];
 	MStdSPrintf(line,sizeof(line),"Error: %s %s(%d)",info,filename,lineno);
 	MStdPrintf("Error: %s %s(%d)\n",info,filename,lineno);
-	return;	
+	return;
 	}
 
 
@@ -234,7 +274,7 @@ bool MStdSetStdInMode(bool binary)
 		{
 		return false;
 		}
-				
+
 	#elif (defined(MSTDLIB_OS_LINUX)  || defined(MSTDLIB_OS_OTHER) || defined(MSTDLIB_OS_MACOS) || defined(MSTDLIB_OS_IPHONE) )
 	if(freopen("/dev/tty",mode,stdin)==NULL)
 		{
@@ -279,13 +319,13 @@ bool MStdSetStdOutMode(bool binary)
 	if(freopen("/dev/tty",mode,stdout)==NULL)
 		{
 		return false;
-		}				
+		}
 
 	return true;
 
 	#else
 	return false;
-	#endif // MSTDLIB_OS_WINDOWS				
+	#endif // MSTDLIB_OS_WINDOWS
 	}
 
 
@@ -441,7 +481,7 @@ bool MStdGetString(char *buffer,int size)
 //////////////////////////////////////////////////////
 bool MStdOpenConsoleIO(void)
 	{
-	#if defined(MSTDLIB_OS_WINDOWS) 
+	#if defined(MSTDLIB_OS_WINDOWS)
 	if(AllocConsole()==FALSE) { return true; }
 
 	FILE *tmp=NULL;
@@ -449,7 +489,7 @@ bool MStdOpenConsoleIO(void)
 		{
 		return false;
 		}
-				
+
 	if(freopen_s(&tmp,"CONOUT$","w",stdout)!=0)
 		{
 		return false;
@@ -463,7 +503,7 @@ bool MStdOpenConsoleIO(void)
 		{
 		return false;
 		}
-				
+
 	if(freopen("CONOUT$","w",stdout)==NULL)
 		{
 		return false;
@@ -475,7 +515,7 @@ bool MStdOpenConsoleIO(void)
 		{
 		return false;
 		}
-				
+
 	if(freopen("/dev/tty","w",stdout)==NULL)
 		{
 		return false;
@@ -487,14 +527,14 @@ bool MStdOpenConsoleIO(void)
 		}
 
 	return true;
-	
+
 	////////////////////////////////////////////////////
 	#elif( defined(MSTDLIB_OS_MACOS) || defined(MSTDLIB_OS_IPHONE) )
 	if(stdin==NULL && freopen("/dev/tty","r",stdin)==NULL)
 		{
 		return false;
 		}
-				
+
 	if(stdout==NULL && freopen("/dev/tty","w",stdout)==NULL)
 		{
 		return false;
@@ -506,7 +546,7 @@ bool MStdOpenConsoleIO(void)
 		}
 
 	return true;
-	
+
 	#else
 	return false;
 	#endif // MSTDLIB_OS_WINDOWS
@@ -532,7 +572,7 @@ bool MStdSetOutput(const char *filename)
 		{
 		return false;
 		}
-	
+
 	return true;
 
 	#endif // MSTDLIB_OS_WINDOWS
@@ -558,7 +598,7 @@ bool MStdSetInput(const char *filename)
 		{
 		return false;
 		}
-	
+
 	return true;
 
 	#else
@@ -589,7 +629,7 @@ bool MStdSetError(const char *filename)
 		{
 		return false;
 		}
-	
+
 	return true;
 
 	//////////////////////////////////////////////
@@ -621,7 +661,7 @@ int MStdSPrintf(char *target,int targetsize,const char *format,...)
 	va_start(args,format);
 
 	int length=_vsnprintf(target,targetsize,format,args);
-	
+
 	va_end(args);
 
 	target[targetsize-1]=0;
@@ -633,7 +673,7 @@ int MStdSPrintf(char *target,int targetsize,const char *format,...)
 	va_start(args,format);
 
 	int length=vsnprintf(target,targetsize,format,args);
-	
+
 	va_end(args);
 
 	target[targetsize-1]=0;
@@ -693,7 +733,7 @@ bool MStdStr(bool value,char strout[],int stroutlen)
 	else
 		{  MStdStrCpy(strout,"false");  }
 
-	return true;	
+	return true;
 	}
 
 
@@ -702,7 +742,7 @@ bool MStdStr(int value,char strout[],int stroutlen)
 	{
 	const int length=MStdSPrintf(strout,stroutlen,"%d",value);
 	if(length>stroutlen+1 || length<=0) { return false; }
-		
+
 	return true;
 	}
 
@@ -712,7 +752,7 @@ bool MStdStr(float value,char strout[],int stroutlen)
 	{
 	const int length=MStdSPrintf(strout,stroutlen,"%f",value);
 	if(length>stroutlen+1 || length<=0) { return false; }
-		
+
 	return true;
 	}
 
@@ -722,7 +762,70 @@ bool MStdStr(double value,char strout[],int stroutlen)
 	{
 	const int length=MStdSPrintf(strout,stroutlen,"%g",value);
 	if(length>stroutlen+1 || length<=0) { return false; }
-		
+
+	return true;
+	}
+
+
+//////////////////////////////////////////////////////
+bool MStdToHumanBinary(double value, double& newvalue, const char*& suffix)
+	{
+	if(MStdAbs(value)<1 && MStdAbs(value)>0)
+		{
+		return false;
+		}
+
+	// Prefixes
+	const char *suffixlist[]={"","k","M","G","T","P","E","Z","Y",0};
+
+	suffix=suffixlist[0];
+	newvalue=value;
+	for(int i=0;  ;++i)
+		{
+		if (MStdAbs(newvalue) < 1024.0) { return true; }
+		if(suffixlist[i+1]==0) { break; }
+		newvalue=newvalue/1024.0;
+		suffix=suffixlist[i+1];
+		}
+
+	return true;
+	}
+
+
+//////////////////////////////////////////////
+bool MStdToHumanMetric(double value, double& newvalue, const char*& suffix)
+	{
+	if(MStdAbs(value)<1 && MStdAbs(value)>0)
+		{
+		// Prefixes
+		const char* suffixlist[] = { "m","u","n","p","f","a",0 };
+
+		suffix=suffixlist[0];
+		newvalue=value*1000.0;
+		for(int i=0;  ;++i)
+			{
+			if (MStdAbs(newvalue) >= 1.0) { return true; }
+			if(suffixlist[i+1]==0) { break; }
+			newvalue=newvalue*1000.0;
+			suffix=suffixlist[i+1];
+			}
+
+		return true;
+		}
+
+	// Prefixes
+	const char *suffixlist[]={"","k","M","G","T","P","E","Z","Y",0};
+
+	suffix=suffixlist[0];
+	newvalue=value;
+	for(int i=0;  ;++i)
+		{
+		if (MStdAbs(newvalue) < 1000.0) { return true; }
+		if(suffixlist[i+1]==0) { break; }
+		newvalue=newvalue/1000.0;
+		suffix=suffixlist[i+1];
+		}
+
 	return true;
 	}
 
@@ -741,7 +844,7 @@ int MStdSPrintf(wchar_t *target,int targetsize,const wchar_t *format,...)
 	length=_vsnwprintf_s(target,targetsize,_TRUNCATE,format,args);
 
 	va_end(args);
-	return length;	
+	return length;
 
 	///////////////////////////////////
 	#elif defined(MSTDLIB_OS_WINDOWSOLD)
@@ -753,8 +856,8 @@ int MStdSPrintf(wchar_t *target,int targetsize,const wchar_t *format,...)
 	length=_vsnwprintf(target,targetsize,format,args);
 
 	va_end(args);
-	return length;	
-	
+	return length;
+
 	////////////////////////////////////
 	#elif ( defined(MSTDLIB_OS_MINGW) )
 	va_list args;
@@ -766,9 +869,9 @@ int MStdSPrintf(wchar_t *target,int targetsize,const wchar_t *format,...)
 	length=vswprintf(target,format,args);
 
 	va_end(args);
-	return length;	
-	
-	
+	return length;
+
+
 	///////////////////////////////////
 	#elif ( defined(MSTDLIB_OS_LINUX) || defined(MSTDLIB_OS_OTHER) || defined(MSTDLIB_OS_MACOS) || defined(MSTDLIB_OS_IPHONE) )
 	va_list args;
@@ -779,8 +882,8 @@ int MStdSPrintf(wchar_t *target,int targetsize,const wchar_t *format,...)
 	length=vswprintf(target,targetsize,format,args);
 
 	va_end(args);
-	return length;	
-	
+	return length;
+
 	#endif // MSTDLIB_OS_WINDOWS
 
 	return 0;
@@ -833,7 +936,7 @@ bool MStdStrWide(bool value,wchar_t strout[],int stroutlen)
 	else
 		{  MStdStrCpy(strout,L"false");  }
 
-	return true;	
+	return true;
 	}
 
 
@@ -842,7 +945,7 @@ bool MStdStrWide(int value,wchar_t strout[],int stroutlen)
 	{
 	const int length=MStdSPrintf(strout,stroutlen,L"%d",value);
 	if(length>stroutlen+1 || length<=0) { return false; }
-		
+
 	return true;
 	}
 
@@ -852,7 +955,7 @@ bool MStdStrWide(float value,wchar_t strout[],int stroutlen)
 	{
 	const int length=MStdSPrintf(strout,stroutlen,L"%f",value);
 	if(length>stroutlen+1 || length<=0) { return false; }
-		
+
 	return true;
 	}
 
@@ -862,7 +965,7 @@ bool MStdStrWide(double value,wchar_t strout[],int stroutlen)
 	{
 	const int length=MStdSPrintf(strout,stroutlen,L"%g",value);
 	if(length>stroutlen+1 || length<=0) { return false; }
-		
+
 	return true;
 	}
 
@@ -938,7 +1041,7 @@ bool MStdWindowOutput(const char *title,const char *info)
 	MStdArray<wchar_t> wtitle;
 	MStdStrCpy(wtitle,title);
 	Platform::String^ ptitle=ref new Platform::String(wtitle.Get() );
-	
+
 	MStdArray<wchar_t> winfo;
 	MStdStrCpy(winfo,info);
 	Platform::String^ pinfo=ref new Platform::String(winfo.Get() );
@@ -948,7 +1051,7 @@ bool MStdWindowOutput(const char *title,const char *info)
 	dlg=nullptr;
 
 	return true;
-	
+
 	#elif (defined(MSTDLIB_OS_WINDOWS) || defined(MSTDLIB_OS_WINDOWSOLD) )
 	MessageBoxA(NULL,info,title,MB_OK);
 
@@ -963,6 +1066,38 @@ bool MStdWindowOutput(const char *title,const char *info)
 
 	return true;
 	}
+
+
+/////////////////////////////////////////////////////////
+bool MStdProgressBar(int index, int max,const char *prefix)
+	{
+	// Print out  [oooooooooooooooooooooo         ] 56%
+	MStdPrintf("%s  [",prefix);
+	for(int i=0;i<50;++i)
+		{
+		if(double(i)<=(49.0*index)/max) { MStdPrintf("*"); }
+		else { MStdPrintf(" "); }
+		}
+
+	MStdPrintf("] %2d%%              \r",(100*index)/max);
+
+	return true;
+	}
+
+
+/////////////////////////////////////////////////////////
+bool MStdProgressBarClean(void)
+	{
+	const int GLineCharCount=75;
+	for(int i=0;i<GLineCharCount;++i)
+		{
+		MStdPrintf(" ");
+		}
+
+	MStdPrintf("\r");
+	return true;
+	}
+
 
 
 ////////////////////////////////////////////////////////
@@ -1057,8 +1192,8 @@ bool MStdIsNan(double val)
 	if(isnan(val)==0)
 		{  return false; }
 	else
-		{  return true;  }	
-	
+		{  return true;  }
+
 	#elif ( defined(MSTDLIB_OS_WINDOWS) || defined(MSTDLIB_OS_WINDOWSOLD) || defined(MSTDLIB_OS_MINGW) )
 	if(_isnan(val)==0)
 		{  return false; }
@@ -1072,7 +1207,7 @@ bool MStdIsNan(double val)
 	else
 		{  return true;  }
 
-	#endif 
+	#endif
 
 	return false;
 	}
@@ -1091,8 +1226,8 @@ bool MStdIsFinite(double val)
 		if(_finite(val)!=0) { return true; }
 		return false;
 
-		#endif	
-	
+		#endif
+
 	/////////////////////////////////////
 	#else
 	if(isfinite(val)) { return true; }
@@ -1100,84 +1235,6 @@ bool MStdIsFinite(double val)
 	#endif
 	}
 
-
-///////////////////////////////////////////////////////
-bool MStdGetEnvVar(const char *var,char *buf,int buflen)
-	{
-	MStdAssert(buf!=0 && buflen>0);
-
-	///////////////////////////////
-	#if defined(MSTDLIB_OS_WINDOWS)
-	if(GetEnvironmentVariableA(var,buf,(DWORD)buflen)==0)
-		{
-		*buf=0;
-		return false;
-		}
-
-	return true;
-
-	///////////////////////////////
-	#elif (defined(MSTDLIB_OS_LINUX) || defined(MSTDLIB_OS_MINGW) || defined(MSTDLIB_OS_MACOS) )
-	const char *envvalue=getenv(var);
-	if(envvalue==0)
-		{
-		*buf=0;
-		return false;
-		}
-
-	const int envvaluelen=MStdStrLen(envvalue);
-	if(envvaluelen+1>buflen)
-		{
-		*buf=0;
-		return false;
-		}
-
-	MStdStrCpy(buf,envvalue);
-
-	return true;
-
-	///////////////////////////////
-	#else
-	return false;
-	#endif
-	}
-
-
-///////////////////////////////////////////////////////
-bool MStdGetUserHome(char *buf,int buflen)
-	{
-	MStdAssert(buf!=0 && buflen>0);
-	///////////////////////////////
-	#if (defined(MSTDLIB_OS_WINDOWS) || defined(MSTDLIB_OS_MINGW) )
-	if(MStdGetEnvVar("USERPROFILE",buf,buflen)==false)
-		{
-		*buf=0;
-		return false;
-		}
-
-	// Convert forward slashes to backword slashes
-	for(int i=0;buf[i]!=0;++i)
-		{
-		if(buf[i]=='\\') {  buf[i]='/'; }
-		}
-	return true;
-
-	///////////////////////////////
-	#elif (defined(MSTDLIB_OS_LINUX) ||  defined(MSTDLIB_OS_MACOS) )
-	if(MStdGetEnvVar("HOME",buf,buflen)==false)
-		{
-		*buf=0;
-		return false;
-		}
-
-	return true;
-	
-
-	///////////////////////////////
-	#else
-	return false;
-	#endif
-	}
 
 ///////////////////////////////////////////////////////
 bool MStdMemCpy(void *target,const void *src,int count)
@@ -1230,7 +1287,7 @@ bool MStdMemZero(void *dst,int size)
 	for(i=0;i<intcount;++i)
 		{  *idst++=0;  }
 
-	// Remaining bytes 
+	// Remaining bytes
 	int remaining=size-intcount*sizeof(int);
 	if(remaining==0) { return true; }
 
@@ -1328,7 +1385,7 @@ int MStdGetCh(bool forcestdio)
 		{  return getchar(); }
 
 	return _getchar_nolock();
-	
+
 	#elif (defined(MSTDLIB_OS_WINDOWS) || defined(MSTDLIB_OS_WINDOWSOLD) )
 	if(forcestdio==true)
 		{  return getchar(); }
@@ -1339,9 +1396,9 @@ int MStdGetCh(bool forcestdio)
 	#elif defined(MSTDLIB_OS_MINGW)
 	if(forcestdio==true)
 		{  return getchar();  }
-	
+
 	return _getch();
-	
+
 	///////////////////////////
 	#elif (defined(MSTDLIB_OS_LINUX) || defined(MSTDLIB_OS_OTHER) || defined(MSTDLIB_OS_MACOS) || defined(MSTDLIB_OS_IPHONE) )
 	if(forcestdio==true)
@@ -1369,7 +1426,7 @@ time_t MStdGetTime(void)
 ////////////////////////////////////////////////
 bool MStdCTime(char *buf,int bufsize,time_t *tmdata)
 	{
-	// Reset size of buffer	
+	// Reset size of buffer
 	buf[0]=0;
 
 	///////////////////////////////////////
@@ -1378,7 +1435,7 @@ bool MStdCTime(char *buf,int bufsize,time_t *tmdata)
 		{
 		return false;
 		}
-	
+
 	// Return current time
 	return true;
 
@@ -1507,7 +1564,7 @@ bool MStdFileCopy(const char *srcfile,const char *dstfile,bool stopifexists,bool
 			break;
 			}
 		}
-	
+
 
 	close(fdsrc);
 	close(fddst);
@@ -1515,7 +1572,7 @@ bool MStdFileCopy(const char *srcfile,const char *dstfile,bool stopifexists,bool
 	return true;
 	#endif // MSTDLIB_API_WINDOWS
 
-	return false;	
+	return false;
 	}
 
 
@@ -1540,7 +1597,7 @@ bool MStdFileExists(const char *filename)
 	return false;
 	#endif // MSTDLIB_OS_WINDOWS
 
-	return false;	
+	return false;
 	}
 
 
@@ -1601,7 +1658,7 @@ bool MStdFileReadText(const char *filename,char *buffer,int &size)
 	MStdFileClose(file);
 	buffer[len]=0;
 	size=len;
-	return true;	
+	return true;
 	}
 
 
@@ -1625,7 +1682,7 @@ bool MStdFileWriteText(const char *filename,const char *data)
 	if(len==0)
 		{
 		MStdFileClose(file);
-		return true;		
+		return true;
 		}
 
 	if(MStdFileWrite(file,data,1,len)!=len)
@@ -1643,7 +1700,7 @@ bool MStdFileWriteText(const char *filename,const char *data)
 bool MStdExec(const char *cmd)
 	{
 	#if defined(MSTDLIB_OS_WINDOWSRT)
-		
+
 		// Do Nothing for WINRT
 		return false;
 
@@ -1655,7 +1712,7 @@ bool MStdExec(const char *cmd)
 
 		return false;
 
-	#endif 
+	#endif
 	}
 
 
@@ -1678,12 +1735,12 @@ int MStdAToI(const wchar_t *str)
 /////////////////////////////////////////////////
 bool MStdIToA(int inval,char *buffer,int length)
 	{
-	
+
 	int maxlength=0;
 
 	// Check for -(number) or 0.
 	if(inval<=0) { maxlength = maxlength+1; }
-	
+
 	if(inval!=0)
 		{
 		int tmpval;
@@ -1715,7 +1772,7 @@ bool MStdIToA(int inval,char *buffer,int length)
 		buffer[0]='-';
 		inval = -inval;
 		}
-	
+
 	// Now write normally
 	int writepos = maxlength-1;
 	while(inval>0)
@@ -1733,12 +1790,12 @@ bool MStdIToA(int inval,char *buffer,int length)
 /////////////////////////////////////////////////
 bool MStdIToA(int inval,wchar_t *buffer,int length)
 	{
-	
+
 	int maxlength=0;
 
 	// Check for -(number) or 0.
 	if(inval<=0) { maxlength = maxlength+1; }
-	
+
 	if(inval!=0)
 		{
 		int tmpval;
@@ -1770,7 +1827,7 @@ bool MStdIToA(int inval,wchar_t *buffer,int length)
 		buffer[0]='-';
 		inval = -inval;
 		}
-	
+
 	// Now write normally
 	int writepos = maxlength-1;
 	while(inval>0)
@@ -1882,7 +1939,7 @@ void *MStdIToP(int val)
 	#else
 	return (void *)(size_t)val;
 
-	#endif	
+	#endif
 	}
 
 
@@ -1894,7 +1951,7 @@ int MStdPToI(void *val)
 	return (int)(__int64)val;
 
 	//////////////////////////
-	#else	
+	#else
 	return (int)(long)(size_t)(val);
 	#endif	// MSTDLIB_OS_WINDOWS
 	}
@@ -2115,7 +2172,7 @@ int MStdGetSum(const int *data,int datacount)
 		{
 		sum = sum + data[i];
 		}
-	
+
 	return sum;
 	}
 
@@ -2130,7 +2187,7 @@ float MStdGetSum(const float *data,int datacount)
 		{
 		sum = sum + data[i];
 		}
-	
+
 	return sum;
 	}
 
@@ -2145,7 +2202,7 @@ double MStdGetSum(const double *data,int datacount)
 		{
 		sum = sum + data[i];
 		}
-	
+
 	return sum;
 	}
 
@@ -2154,7 +2211,7 @@ double MStdGetSum(const double *data,int datacount)
 int MStdGetMidIndex(const double *data,int datacount)
 	{
 	MStdAssert(data!=NULL && datacount>0);
-	
+
 	const double datasum=MStdGetSum(data,datacount);
 	const double midsum=datasum/2.0;
 
@@ -2168,7 +2225,7 @@ int MStdGetMidIndex(const double *data,int datacount)
 			if(total>midsum) { return i; }
 			}
 		}
-	
+
 	return 0;
 	}
 
@@ -2212,7 +2269,7 @@ void MStdSRand(void)
 ////////////////////////////////////////////////////
 void MStdSRand(int seed)
 	{
-	// Will Reimplement in terms of x<-(Ax+B) mod C 
+	// Will Reimplement in terms of x<-(Ax+B) mod C
 	// Need to find Good Values for A/B/C
 	srand((unsigned int)seed);
 	}
@@ -2221,54 +2278,11 @@ void MStdSRand(int seed)
 ////////////////////////////////////////////////////
 int MStdRand(int maxvalue)
 	{
-	// Will Reimplement in terms of x<-(Ax+B) mod C 
+	// Will Reimplement in terms of x<-(Ax+B) mod C
 	// Need to find Good Values for A/B/C
 	return rand()%maxvalue;
 	}
 
-
-///////////////////////////////////////////////////
-bool MStdGetUUID(char buf[],int buflen)
-	{
-	MStdAssert(buf!=0 && buflen>=37);
-
-	////////////////////////////
-	#if defined(MSTDLIB_OS_WINDOWSRT)
-	return false;
-
-	#elif (defined(MSTDLIB_OS_WINDOWS) || defined(MSTDLIB_OS_WINDOWSOLD) || defined(MSTDLIB_OS_MINGW) )
-	UUID newuuid;
-	if(UuidCreate(&newuuid)!=RPC_S_OK)
-		{
-		return false;
-		}
-
-	char *uuidstr;
-	if(UuidToStringA(&newuuid,(RPC_CSTR *)&uuidstr)!=RPC_S_OK)
-		{
-		return false;
-		}
-
-	if(MStdStrCpy(buf,buflen,uuidstr)==false)
-		{
-		// Unable to copy UUID string to output
-		}
-
-	RpcStringFreeA((RPC_CSTR *)&uuidstr);
-	MStdStrToLower(buf);
-	return true;
-
-	////////////////////////////
-	#elif (defined(MSTDLIB_OS_LINUX) || defined(MSTDLIB_OS_OTHER) || defined(MSTDLIB_OS_MACOS) || defined(MSTDLIB_OS_IPHONE) )
-	uuid_t newuuid;
-	uuid_generate(newuuid);
-	uuid_unparse(newuuid,buf);
-	MStdStrToLower(buf);
-	return true;
-
-	#endif // MSTDLIB_OS_WINDOWS	
-	return true;
-	}
 
 ///////////////////////////////////////////////////
 unsigned int MStdGetTimeOfDay(void)
@@ -2313,7 +2327,7 @@ const double MStdLibConstPi=3.14159265358979323846;
 bool MStdGetMachineName(char *buffer,int bufferlen)
 	{
 	MStdAssert(buffer!=0 && bufferlen>40);
-	
+
 	////////////////////////////////////////
 	#if defined(MSTDLIB_OS_WINDOWSRT)
 	if(buffer!=NULL) { *buffer=0; }
@@ -2341,6 +2355,52 @@ bool MStdGetMachineName(char *buffer,int bufferlen)
 	}
 
 
+//////////////////////////////////////////////////////
+bool MStdGetMachineName(MStdArray<char> &name)
+	{
+	const int namelen=100;
+	if (name.Create(namelen) == false)
+		{
+		return false;
+		}
+
+	////////////////////////////////////////
+	#if defined(MSTDLIB_OS_WINDOWSRT)
+	if(buffer!=NULL) { *buffer=0; }
+	return false;
+
+	#elif ( defined(MSTDLIB_OS_WINDOWS) || defined(MSTDLIB_OS_WINDOWSOLD) || defined(MSTDLIB_OS_MINGW) )
+	DWORD dwbufferlen=namelen-4;
+	if(GetComputerNameA(name.Get(), &dwbufferlen) == FALSE)
+		{
+		return false;
+		}
+
+	return true;
+
+	////////////////////////////////////////
+	#elif ( defined(MSTDLIB_OS_LINUX) || defined(MSTDLIB_OS_OTHER) || defined(MSTDLIB_OS_MACOS) || defined(MSTDLIB_OS_IPHONE) )
+	if(gethostname(name.Get(), namelen-4) != 0)
+		{
+		return false;
+		}
+
+	return true;
+
+	#endif
+	}
+
+
+//////////////////////////////////////////////////////////
+bool MStdGetIsLittleEndian(void)
+	{
+	const unsigned int value=1U;
+	const unsigned char *ptr=(const unsigned char *)&value;
+	if(ptr[0]==1) { return true; }
+	return false;
+	}
+
+
 //////////////////////////////////////////////////////////
 unsigned int MStdGetProcessID(void)
 	{
@@ -2352,7 +2412,7 @@ unsigned int MStdGetProcessID(void)
 
 	return (unsigned int) getpid();
 
-	#endif	
+	#endif
 	}
 
 
@@ -2380,7 +2440,39 @@ bool MStdGetOSRoot(char *buffer,int bufferlen)
 
 	return true;
 
-	#endif	
+	#endif
+	}
+
+
+//////////////////////////////////////////////////////////
+bool MStdGetOSRoot(MStdArray<char> &root)
+	{
+	const int rootlen=16;
+	if (root.Create(rootlen) == false)
+		{
+		return false;
+		}
+	////////////////////////////////////////
+	#if ( defined(MSTDLIB_OS_WINDOWS) || defined(MSTDLIB_OS_WINDOWSOLD) || defined(MSTDLIB_OS_MINGW) || defined(MSTDLIB_OS_WINDOWSRT) )
+	if(MStdStrCpy(root.Get(), root.GetLength()-2, "c:/") == false)
+		{
+		root.Get()[0]=0;
+		return false;
+		}
+
+	return true;
+
+	////////////////////////////////////////
+	#elif ( defined(MSTDLIB_OS_LINUX) || defined(MSTDLIB_OS_OTHER) || defined(MSTDLIB_OS_MACOS) || defined(MSTDLIB_OS_IPHONE) )
+	if(MStdStrCpy(root.Get(), root.GetLength()-2, "/") == false)
+		{
+		root.Get()[0]=0;
+		return false;
+		}
+
+	return true;
+
+	#endif
 	}
 
 
@@ -2408,7 +2500,40 @@ bool MStdGetOSPathSeperator(char *buffer,int bufferlen)
 
 	return true;
 
-	#endif	
+	#endif
+	}
+
+
+/////////////////////////////////////////////////////////
+bool MStdGetOSPathSeperator(MStdArray<char> &sep)
+	{
+	const int seplength=16;
+	if (sep.Create(seplength) == false)
+		{
+		return false;
+		}
+
+	////////////////////////////////////////
+	#if ( defined(MSTDLIB_OS_WINDOWS) || defined(MSTDLIB_OS_WINDOWSOLD) || defined(MSTDLIB_OS_MINGW) || defined(MSTDLIB_OS_WINDOWSRT) )
+	if(MStdStrCpy(sep.Get(), sep.GetLength()-2, ";") == false)
+		{
+		sep.Get()[0]=0;
+		return false;
+		}
+
+	return true;
+
+	////////////////////////////////////////
+	#elif ( defined(MSTDLIB_OS_LINUX) || defined(MSTDLIB_OS_OTHER) || defined(MSTDLIB_OS_MACOS) || defined(MSTDLIB_OS_IPHONE) )
+	if(MStdStrCpy(sep.Get(), sep.GetLength()-2, ":") == false)
+		{
+		sep.Get()[0]=0;
+		return false;
+		}
+
+	return true;
+
+	#endif
 	}
 
 
@@ -2423,7 +2548,7 @@ bool MStdIsUnix(void)
 	#elif ( defined(MSTDLIB_OS_LINUX) || defined(MSTDLIB_OS_OTHER) || defined(MSTDLIB_OS_MACOS) || defined(MSTDLIB_OS_IPHONE) )
 	return true;
 
-	#endif		
+	#endif
 
 	return false;
 	}
@@ -2440,7 +2565,7 @@ bool MStdIsWindows(void)
 	#elif ( defined(MSTDLIB_OS_LINUX) || defined(MSTDLIB_OS_OTHER) || defined(MSTDLIB_OS_MACOS) || defined(MSTDLIB_OS_IPHONE) )
 	return false;
 
-	#endif		
+	#endif
 
 	return false;
 	}
@@ -2455,7 +2580,7 @@ bool MStdDirGet(char *buffer,int bufferlen)
 	dlen=GetCurrentDirectoryA(bufferlen-1,buffer);
 	if(dlen>=DWORD(bufferlen) || dlen<=1)
 		{
-		
+
 		return false;
 		}
 
@@ -2472,8 +2597,8 @@ bool MStdDirGet(char *buffer,int bufferlen)
 		{
 		if(buffer[i]=='\\') { buffer[i]='/'; }
 		}
-	
-	return true;	
+
+	return true;
 
 	////////////////////////////////////////
 	#elif ( defined(MSTDLIB_OS_LINUX) || defined(MSTDLIB_OS_OTHER) || defined(MSTDLIB_OS_MACOS) || defined(MSTDLIB_OS_IPHONE) )
@@ -2493,7 +2618,7 @@ bool MStdDirGet(char *buffer,int bufferlen)
 
 	return true;
 
-	#endif		
+	#endif
 
 	return false;
 	}
@@ -2511,8 +2636,8 @@ bool MStdDirSet(const char *dirpath)
 		{
 		return false;
 		}
-	
-	return true;	
+
+	return true;
 
 	////////////////////////////////////////
 	#elif ( defined(MSTDLIB_OS_LINUX) || defined(MSTDLIB_OS_OTHER) || defined(MSTDLIB_OS_MACOS) || defined(MSTDLIB_OS_IPHONE) )
@@ -2542,8 +2667,8 @@ bool MStdDirCreate(const char *dirpath)
 		{
 		return false;
 		}
-	
-	return true;	
+
+	return true;
 
 	////////////////////////////////////////
 	#elif ( defined(MSTDLIB_OS_LINUX) || defined(MSTDLIB_OS_OTHER) || defined(MSTDLIB_OS_MACOS) || defined(MSTDLIB_OS_IPHONE) )
@@ -2578,8 +2703,8 @@ bool MStdDirDestroy(const char *dirpath,bool generror)
 
 		return false;
 		}
-	
-	return true;	
+
+	return true;
 
 	////////////////////////////////////////
 	#elif ( defined(MSTDLIB_OS_LINUX) || defined(MSTDLIB_OS_OTHER) || defined(MSTDLIB_OS_MACOS) || defined(MSTDLIB_OS_IPHONE) )
@@ -2603,37 +2728,30 @@ bool MStdDirDestroy(const char *dirpath,bool generror)
 
 
 //////////////////////////////////////////////////////
-bool MStdGetUserName(char buf[],int buflength)
+bool MStdDirExists(const char* dirpath)
 	{
-	MStdAssert(buflength>=30 && buf!=0);
+	MStdAssert(dirpath!=NULL && *dirpath!=0);
 
-	///////////////////////////////////////////
 	#if ( defined(MSTDLIB_OS_WINDOWS) || defined(MSTDLIB_OS_WINDOWSOLD) || defined(MSTDLIB_OS_MINGW) )
-	DWORD buflen=buflength;
-	BOOL ret=GetUserNameA(buf,&buflen);
-	if(ret==FALSE)
-		{
-		buf[0]=0;
-		return false;
-		}
+	DWORD fileattributes=GetFileAttributesA(dirpath);
+	if(fileattributes==INVALID_FILE_ATTRIBUTES) { return false; }
+	if((fileattributes&FILE_ATTRIBUTE_DIRECTORY)>0) { return true; }
+	return false;
 
-	return true;
-
-	///////////////////////////////////////////
+	////////////////////////////////////////
 	#elif ( defined(MSTDLIB_OS_LINUX) || defined(MSTDLIB_OS_OTHER) || defined(MSTDLIB_OS_MACOS) || defined(MSTDLIB_OS_IPHONE) )
+	int retval;
+	struct stat filestatus;
+	retval=stat(dirpath,&filestatus);
+	if(retval!=0) { return false; }
+	if((filestatus.st_mode & S_IFDIR)>0) { return true; }
+	return false;
 
-	struct passwd *pdata=getpwuid(getuid());
-	if(pdata==NULL)
-		{
-		buf[0]=0;
-		return false;
-		}
-
-	MStdStrCpy(buf,pdata->pw_name);
-	return true;
 	#endif
+
+	return false;
 	}
-	
+
 
 //////////////////////////////////////////////////////
 bool MStdStrCpy(char *outstr,int maxoutlen,const wchar_t *str)
@@ -2713,7 +2831,7 @@ bool MStdPathSetSlash(char *path)
 		*(p-1)=0;
 		}
 
-	return true;	
+	return true;
 	}
 
 
@@ -2748,7 +2866,7 @@ bool MStdPathGetAbsolute(const char *filename,MStdArray<char> &absolutepath)
 
 	// Convert to Canonical Path with \ converted to /
 	MStdPathSetSlash(absolutepath.Get() );
-	
+
 	return true;
 	/////////////////////////////////////////////////
 	#elif (defined(MSTDLIB_API_LINUX) )
@@ -2795,6 +2913,51 @@ bool MStdPathGetAbsolute(const char *filename,MStdArray<char> &absolutepath)
 	}
 
 
+/////////////////////////////////////////////////////////////////
+const char* MStdPathGetExtension(const char* path)
+	{
+	MStdAssert(path!=NULL);
+	int lastpos;
+	for (lastpos = 0; path[lastpos] != 0; lastpos = lastpos + 1) { }
+	for (lastpos = lastpos - 1; lastpos >= 0; --lastpos)
+		{
+		if(path[lastpos]=='.') { return path+lastpos; }
+		}
+
+	return NULL;
+	}
+
+
+/////////////////////////////////////////////////////////////////
+const char* MStdPathGetFileName(const char* path)
+	{
+	MStdAssert(path!=NULL);
+	int lastpos;
+	for (lastpos = 0; path[lastpos] != 0; lastpos = lastpos + 1) {}
+	for (lastpos = lastpos - 1; lastpos >= 0; --lastpos)
+		{
+		if (path[lastpos] == '/' || path[lastpos]=='\\') { return path + lastpos+1; }
+		}
+
+	return path;
+	}
+
+
+////////////////////////////////////////////////////////////////
+const char* MStdPathDiff(const char* largerabspath, const char* smallerabspath)
+	{
+	MStdAssert(largerabspath!=0 && smallerabspath!=0);
+	const char *ptr=largerabspath;
+	for (const char* p = smallerabspath; *p != 0; ++p)
+		{
+		if(*p!=*ptr) { return 0; }
+		++ptr;
+		}
+
+	return ptr;
+	}
+
+
 ////////////////////////////////////////////////////////////////
 bool MStdDirGet(MStdArray<char> &path)
 	{
@@ -2804,13 +2967,13 @@ bool MStdDirGet(MStdArray<char> &path)
 		}
 
 	#if ( defined(MSTDLIB_OS_WINDOWS) || defined(MSTDLIB_OS_WINDOWSOLD) || defined(MSTDLIB_OS_MINGW) )
-	
+
 	DWORD dlen;
 	char *buffer=path.Get();
 	dlen=GetCurrentDirectoryA(path.GetLength()-2,path.Get());
 	if(dlen>=DWORD(path.GetLength()-2) || dlen<=1)
 		{
-		
+
 		return false;
 		}
 
@@ -2827,8 +2990,8 @@ bool MStdDirGet(MStdArray<char> &path)
 		{
 		if(buffer[i]=='\\') { buffer[i]='/'; }
 		}
-	
-	return true;	
+
+	return true;
 
 	////////////////////////////////////////
 	#elif ( defined(MSTDLIB_OS_LINUX) || defined(MSTDLIB_OS_OTHER) || defined(MSTDLIB_OS_MACOS) || defined(MSTDLIB_OS_IPHONE) )
@@ -2850,7 +3013,7 @@ bool MStdDirGet(MStdArray<char> &path)
 
 	#endif
 
-	return false;	
+	return false;
 	}
 
 
@@ -2914,4 +3077,320 @@ bool MStdFileReadText(const char *filename,MStdArray<char> &data)
 	return true;
 	}
 
+
+/////////////////////////////////////////////////////////////
+bool MStdFileReadBinary(const char* filename, MStdArray<char>& data)
+	{
+	if (filename == NULL || *filename == 0)
+		{
+		return false;
+		}
+
+	// Check if file exists
+	if (MStdFileExists(filename) == false)
+		{
+		return false;
+		}
+
+	// Read from file
+	MStdFileHandle file = MStdFileOpen(filename, "rb");
+	if (file == NULL)
+		{
+		return true;
+		}
+
+	// seek to end of file
+	MStdFileSeek(file, 0, 2);
+
+	long filesize = MStdFileTell(file);
+	if (filesize < 0)
+		{
+		MStdFileClose(file);
+		return true;
+		}
+
+	// Seek back to beginning
+	MStdFileSeek(file, 0, 0);
+
+	// Allocate buffer space
+	if (data.Create(filesize) == false)
+		{
+		MStdFileClose(file);
+		return false;
+		}
+
+	int len = MStdFileRead(file, data.Get(), 1, filesize);
+	if (len != filesize)
+		{
+		data.Destroy();
+		MStdFileClose(file);
+		return false;
+		}
+
+	MStdFileClose(file);
+	return true;
+	}
+
+
+//////////////////////////////////////////////////////
+bool MStdFileWrite(const char* filename, const char* buffer, int elementsize, int elementcount)
+	{
+	MStdFileHandle file = MStdFileOpen(filename, "wb");
+	if (file == NULL)
+		{
+		return true;
+		}
+
+	if(MStdFileWrite(file,(const void *)buffer,elementsize,elementcount)!=elementcount)
+		{
+		MStdFileClose(file);
+		return false;
+		}
+
+	MStdFileClose(file);
+	return true;
+	}
+
+///////////////////////////////////////////////////////
+bool MStdGetEnvVar(const char *var,char *buf,int buflen)
+	{
+	MStdAssert(buf!=0 && buflen>0);
+
+	///////////////////////////////
+	#if defined(MSTDLIB_OS_WINDOWS)
+	if(GetEnvironmentVariableA(var,buf,(DWORD)buflen)==0)
+		{
+		*buf=0;
+		return false;
+		}
+
+	return true;
+
+	///////////////////////////////
+	#elif (defined(MSTDLIB_OS_LINUX) || defined(MSTDLIB_OS_MINGW) || defined(MSTDLIB_OS_MACOS) )
+	const char *envvalue=getenv(var);
+	if(envvalue==0)
+		{
+		*buf=0;
+		return false;
+		}
+
+	const int envvaluelen=MStdStrLen(envvalue);
+	if(envvaluelen+1>buflen)
+		{
+		*buf=0;
+		return false;
+		}
+
+	MStdStrCpy(buf,envvalue);
+
+	return true;
+
+	///////////////////////////////
+	#else
+	return false;
+	#endif
+	}
+
+
+///////////////////////////////////////////////////////
+bool MStdGetEnvVar(const char *var,MStdArray<char> &value)
+	{
+	MStdAssert(var!=0 && *var!=0);
+
+	///////////////////////////////
+	#if defined(MSTDLIB_OS_WINDOWS)
+	DWORD reqbufsize=GetEnvironmentVariableA(var, 0, 0);
+	if(reqbufsize==0)
+		{
+		return false;
+		}
+
+	if(value.Create((int)reqbufsize+4)==false)
+		{
+		return false;
+		}
+
+	if(GetEnvironmentVariableA(var,value.Get(),value.GetLength()+2)==0)
+		{
+		return false;
+		}
+
+	return true;
+
+	///////////////////////////////
+	#elif (defined(MSTDLIB_OS_LINUX) || defined(MSTDLIB_OS_MINGW) || defined(MSTDLIB_OS_MACOS) )
+	const char *envvalue=getenv(var);
+	if(envvalue==0)
+		{
+		return false;
+		}
+
+	const int envvaluelen=MStdStrLen(envvalue);
+
+	if (value.Create(envvaluelen + 4) == false)
+		{
+		return false;
+		}
+
+	MStdStrCpy(value.Get(),envvaluelen+2,envvalue);
+
+	return true;
+
+	///////////////////////////////
+	#else
+	return false;
+	#endif
+	}
+
+
+///////////////////////////////////////////////////////
+bool MStdGetUserHome(char *buf,int buflen)
+	{
+	MStdAssert(buf!=0 && buflen>0);
+	///////////////////////////////
+	#if (defined(MSTDLIB_OS_WINDOWS) || defined(MSTDLIB_OS_MINGW) )
+	if(MStdGetEnvVar("USERPROFILE",buf,buflen)==false)
+		{
+		*buf=0;
+		return false;
+		}
+
+	// Convert forward slashes to backword slashes
+	for(int i=0;buf[i]!=0;++i)
+		{
+		if(buf[i]=='\\') {  buf[i]='/'; }
+		}
+	return true;
+
+	///////////////////////////////
+	#elif (defined(MSTDLIB_OS_LINUX) ||  defined(MSTDLIB_OS_MACOS) )
+	if(MStdGetEnvVar("HOME",buf,buflen)==false)
+		{
+		*buf=0;
+		return false;
+		}
+
+	return true;
+
+
+	///////////////////////////////
+	#else
+	return false;
+	#endif
+	}
+
+
+///////////////////////////////////////////////////////
+bool MStdGetUserHome(MStdArray<char> &userhome)
+	{
+	///////////////////////////////
+	#if (defined(MSTDLIB_OS_WINDOWS) || defined(MSTDLIB_OS_MINGW) )
+	if(MStdGetEnvVar("USERPROFILE",userhome)==false)
+		{
+		return false;
+		}
+
+	// Convert forward slashes to backword slashes
+	char *buf=userhome.Get();
+	for(int i=0;buf[i]!=0;++i)
+		{
+		if(buf[i]=='\\') {  buf[i]='/'; }
+		}
+
+	return true;
+
+	///////////////////////////////
+	#elif (defined(MSTDLIB_OS_LINUX) ||  defined(MSTDLIB_OS_MACOS) )
+	if(MStdGetEnvVar("HOME",userhome)==false)
+		{
+		return false;
+		}
+
+	return true;
+
+
+	///////////////////////////////
+	#else
+	return false;
+	#endif
+	}
+
+
+//////////////////////////////////////////////////////
+bool MStdGetUserName(char buf[],int buflength)
+	{
+	MStdAssert(buflength>=30 && buf!=0);
+
+	///////////////////////////////////////////
+	#if ( defined(MSTDLIB_OS_WINDOWS) || defined(MSTDLIB_OS_WINDOWSOLD) || defined(MSTDLIB_OS_MINGW) )
+	DWORD buflen=buflength;
+	BOOL ret=GetUserNameA(buf,&buflen);
+	if(ret==FALSE)
+		{
+		buf[0]=0;
+		return false;
+		}
+
+	return true;
+
+	///////////////////////////////////////////
+	#elif ( defined(MSTDLIB_OS_LINUX) || defined(MSTDLIB_OS_OTHER) || defined(MSTDLIB_OS_MACOS) || defined(MSTDLIB_OS_IPHONE) )
+	struct passwd *pdata=getpwuid(getuid());
+	if(pdata==NULL)
+		{
+		buf[0]=0;
+		return false;
+		}
+
+	MStdStrCpy(buf,buflength-1,pdata->pw_name);
+	return true;
+	#endif
+	}
+
+
+//////////////////////////////////////////////////////
+bool MStdGetUserName(MStdArray<char> &username)
+	{
+	///////////////////////////////////////////
+	#if ( defined(MSTDLIB_OS_WINDOWS) || defined(MSTDLIB_OS_WINDOWSOLD) || defined(MSTDLIB_OS_MINGW) )
+	DWORD buflen=0;
+	BOOL ret=GetUserNameA(0,&buflen);
+	if (buflen <= 0)
+		{
+		return false;
+		}
+
+	if (username.Create(2+(int)buflen) == false)
+		{
+		return false;
+		}
+
+	ret = GetUserNameA(username.Get(), &buflen);
+	if(ret==FALSE)
+		{
+		username.Destroy();
+		return false;
+		}
+
+	return true;
+
+	///////////////////////////////////////////
+	#elif ( defined(MSTDLIB_OS_LINUX) || defined(MSTDLIB_OS_OTHER) || defined(MSTDLIB_OS_MACOS) || defined(MSTDLIB_OS_IPHONE) )
+
+	struct passwd *pdata=getpwuid(getuid());
+	if(pdata==NULL)
+		{
+		return false;
+		}
+
+	if(username.Create(2+MStdStrLen(pdata->pw_name))==false)
+		{
+		return false;
+		}
+
+	MStdStrCpy(username.Get(),pdata->pw_name);
+	return true;
+	#endif
+	}
 

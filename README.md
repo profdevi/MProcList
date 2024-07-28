@@ -1,16 +1,16 @@
 # MProcList
 Windows console application to display currently running processes.
 
+<pre>
+   usage:  MProcList [-?|-gpl] [-u] [-l] [-s]
+           v1.1 copyright Comine.com
+           -gpl Displays the GPL license
 
-## Download Links 
+           Display all running process Identifiers
 
+   flags:
+              -u   : Show User SID
+              -l   : Show full path to process
+              -s   : Show Session ID
 
-The following links is for the direct download of the 32 bit executable with
-an MD5 digest of the executable.
-
-Windows 32-bit Binary : [MProcList.exe](bin/MProcList.exe)
-
-MD5 Digest for binary : [MProcList.exe.md5](bin/MProcList.exe.md5)
-
-
-
+</pre>

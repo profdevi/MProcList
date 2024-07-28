@@ -1,24 +1,36 @@
-/*    
-    MProcList.exe : Display the current running processes
-    Copyright (C) 2017  Comine.com
+/*
+Copyright (C) 2011-2024, Comine.com ( profdevi@ymail.com )
+All rights reserved.
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+- Redistributions of source code must retain the above copyright notice,
+  this list of conditions and the following disclaimer.
+- Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
+- The the names of the contributors of this project may not be used to 
+  endorse or promote products derived from this software without specific 
+  prior written permission.
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+`AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+A PARTICULAR PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL THE FOUNDATION OR
+CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
 
-//v3.2 copyright Comine.com 20170409U0957
+//v3.8 copyright Comine.com 20240701M0817
 #ifndef MString_h
 #define MString_h
 
@@ -46,6 +58,7 @@ class MString
 	MString(const char *str);
 	MString(const wchar_t *str);
 	MString(const MString &str);				// Copy Constructor
+	MString(MString &&str);						// Move Constructor
 	MString(MStringWide &str);
 	~MString(void);
 	bool Create(const char *str);
@@ -56,17 +69,20 @@ class MString
 	bool Create(wchar_t ch);
 	bool Create(MIReader &reader);
 	bool Destroy(void);
+	bool Swap(MString &other) noexcept;
 
 	// Operators
 	bool operator=(const char *str);
 	bool operator=(const wchar_t *str);
-	bool operator=(MString &src);
+	bool operator=(const MString &src);
+	bool operator==(const MString &other) const;	// Check if two strings are the same
+	bool operator!=(const MString& other) const;		// Check if two strings are the same
 	MString operator +(const char *str);		// return a temp object
 	MString operator +(MString &ref);			// return a temp object
 	MString operator +(MStringWide &ref);		// return a temp object
 	char &operator[](int index);
-	const char *Get(void);
-	const char *GetEnd(int count);				// Get End String
+	const char *Get(void) const;
+	const char *GetEnd(int count) const;		// Get End String
 	bool ToUpper(void);
 	bool ToLower(void);
 	bool Trim(void);							// Trim Spaces
@@ -82,10 +98,10 @@ class MString
 	bool Append(double val);
 	bool Append(bool val);
 	int Length(void);
-	int Compare(const char *string);
-	int Compare(const wchar_t *string);
-	int Compare(MString &string);
-	int Compare(MStringWide &string);
+	int Compare(const char *string) const;
+	int Compare(const wchar_t *string) const;
+	int Compare(const MString &string) const;
+	int Compare(const MStringWide &string) const;
 	bool Write(MIWriter &writer) const;
 	bool Zero(void);										// zero out the memory
 
@@ -150,7 +166,6 @@ class MString
 	};
 
 
-
 ////////////////////////////////////////////////
 class MStringWide
 	{
@@ -165,7 +180,8 @@ class MStringWide
 	MStringWide(void);
 	MStringWide(const char *str);
 	MStringWide(const wchar_t *str);
-	MStringWide(MStringWide &str);
+	MStringWide(MStringWide &str);				// Copy Constructor
+	MStringWide(MStringWide &&str);				// Move Constructor
 	MStringWide(MString &str);
 	~MStringWide(void);
 	bool Create(const char *str);
@@ -176,11 +192,14 @@ class MStringWide
 	bool Create(wchar_t ch);
 	bool Create(MIReader &reader);
 	bool Destroy(void);
+	bool Swap(MStringWide& other) noexcept;
 	bool operator=(const char *str);
 	bool operator=(const wchar_t *str);
-	bool operator=(MStringWide &src);
+	bool operator=(const MStringWide &src);
+	bool operator==(const MStringWide& other) const;	// Check if two strings are the same
+	bool operator!=(const MStringWide& other) const;	// Check if two strings are the same
 	wchar_t &operator[](int index);
-	const wchar_t *Get(void);
+	const wchar_t *Get(void) const;
 	const wchar_t *GetEnd(int count);			// Get End String
 	bool ToUpper(void);
 	bool ToLower(void);
@@ -197,10 +216,10 @@ class MStringWide
 	bool Append(double val);
 	bool Append(bool val);
 	int Length(void);
-	int Compare(const char *string);
-	int Compare(const wchar_t *string);
-	int Compare(MString &string);
-	int Compare(MStringWide &string);
+	int Compare(const char *string) const ;
+	int Compare(const wchar_t *string) const;
+	int Compare(const MString &string) const;
+	int Compare(const MStringWide &string) const;
 	bool Write(MIWriter &writer) const;
 	};
 
